@@ -1,0 +1,53 @@
+services:
+  scanner_image:
+    build:
+      context: ./bugbounty_recon
+      dockerfile: Dockerfile
+    image: bugbounty_recon:latest
+    container_name: scanner_builder
+    entrypoint: ["true"]
+    restart: "no"
+
+  redis:
+    image: redis:7-alpine
+    container_name: recon_redis
+    ports:
+      - "6379:6379"
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bugbounty_reconv-web:latest
+    container_name: recon_web
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --ssl-keyfile=/app/certs/key.pem --ssl-certfile=/app/certs/cert.pem --reload
+    env_file:
+      - .env
+    environment:
+      - HOST_PWD=${PWD}
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - scanner_image
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bugbounty_reconv-worker:latest
+    container_name: recon_worker
+    command: celery -A tasks.celery_app worker --loglevel=info
+    env_file:
+      - .env
+    environment:
+      - HOST_PWD=${PWD}
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - redis
+      - scanner_image

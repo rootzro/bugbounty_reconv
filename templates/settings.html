@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - BugBounty Recon Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #050608;
+            --bg-card: #0b0c10;
+            --bg-sidebar: #07080b;
+            --border-color: #161822;
+            --border-hover: #262938;
+
+            --primary-accent: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --cyan-accent: #06b6d4;
+
+            --text-main: #f3f4f6;
+            --text-muted: #6b7280;
+            --text-subtle: #9ca3af;
+
+            /* ProjectDiscovery Severities */
+            --sev-critical: #ef4444;
+            --sev-high: #f97316;
+            --sev-medium: #eab308;
+            --sev-low: #a855f7;
+            --sev-info: #06b6d4;
+            --sev-unknown: #64748b;
+
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        /* ProjectDiscovery top gradient stripe */
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #ec4899 0%, #f97316 40%, #8b5cf6 100%);
+            z-index: 9999;
+        }
+
+        /* ==========================================
+           SIDEBAR
+           ========================================== */
+        .sidebar {
+            width: 250px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 16px;
+            flex-shrink: 0;
+            z-index: 10;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            margin-bottom: 24px;
+            padding-top: 4px;
+        }
+
+        .brand-icon {
+            width: 30px;
+            height: 30px;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--cyan-accent);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+
+        .nav-item a:hover {
+            color: var(--text-main);
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-item.active a {
+            background-color: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.875rem;
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            background-color: var(--primary-accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            color: #ffffff;
+        }
+
+        .logout-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.8125rem;
+            transition: color 0.2s;
+        }
+
+        .logout-btn:hover {
+            color: var(--danger);
+        }
+
+        /* ==========================================
+           MAIN AREA AND CONTENT
+           ========================================== */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-y: auto;
+            min-width: 0;
+        }
+
+        .content-body {
+            padding: 32px 40px;
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* View Header */
+        .page-header {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* Icon-Only Buttons */
+        .btn-icon-only {
+            width: 40px;
+            height: 40px;
+            background-color: #08090d;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn-icon-only:hover {
+            border-color: var(--border-hover);
+            background-color: rgba(255, 255, 255, 0.04);
+            color: #ffffff;
+        }
+
+        .btn-primary-icon {
+            background-color: var(--primary-accent);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary-icon:hover {
+            background-color: var(--primary-hover);
+            color: white;
+        }
+
+        /* File path */
+        .config-path {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .config-path code {
+            color: var(--cyan-accent);
+            background-color: rgba(6, 182, 212, 0.08);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(6, 182, 212, 0.2);
+        }
+
+        /* Alert Box */
+        .alert-box {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.84rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+            display: none;
+            border: 1px solid transparent;
+            line-height: 1.4;
+        }
+
+        .alert-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.25);
+        }
+
+        .alert-info {
+            background-color: rgba(6, 182, 212, 0.1);
+            color: var(--cyan-accent);
+            border-color: rgba(6, 182, 212, 0.25);
+        }
+
+        /* JSON Editor Card */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 520px;
+            overflow: hidden;
+        }
+
+        .editor-header {
+            background-color: #08090d;
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8125rem;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-synced {
+            background-color: var(--success);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        }
+
+        .status-unsaved {
+            background-color: var(--warning);
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+        }
+
+        .status-error {
+            background-color: var(--danger);
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+        }
+
+        .json-textarea {
+            width: 100%;
+            flex: 1;
+            background-color: #040507;
+            color: #a7f3d0;
+            border: none;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .json-textarea:focus {
+            box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.4);
+        }
+
+        .json-textarea::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .json-textarea::-webkit-scrollbar-thumb {
+            background: var(--border-hover);
+            border-radius: 4px;
+        }
+    </style>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div>
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg>
+                </div>
+                <span>Bugbounty_reconV</span>
+            </div>
+
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        </svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/results">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                        Results
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="/settings">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="3" />
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                        Settings
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="user-profile">
+            <div class="user-info">
+                <div class="avatar">{{ user[0].upper() if user else 'U' }}</div>
+                <span>{{ user if user else 'User' }}</span>
+            </div>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="content-body">
+
+            <header class="page-header">
+                <h1 class="page-title">Recon configuration</h1>
+
+                <div class="header-actions">
+                    <!-- Format Button -->
+                    <button onclick="formatJSON()" class="btn-icon-only" title="Format JSON">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                            </path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                    </button>
+                    <!-- Reload Button -->
+                    <button onclick="loadConfig()" class="btn-icon-only" title="Reload Configuration">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                    </button>
+                    <!-- Save Changes Button -->
+                    <button onclick="saveConfig()" class="btn-icon-only btn-primary-icon" title="Save Changes">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <div class="config-path">
+                Target file: <code>bugbounty_recon/config/bugbounty_config.json</code>
+            </div>
+
+            <div id="alertBox" class="alert-box"></div>
+
+            <!-- JSON Editor Block -->
+            <div class="card">
+                <div class="editor-header">
+                    <span
+                        style="color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">bugbounty_config.json</span>
+                    <span id="statusIndicator">
+                        <span class="status-dot status-synced"></span>Synced
+                    </span>
+                </div>
+                <textarea id="jsonEditor" class="json-textarea" spellcheck="false"
+                    placeholder="Loading configuration...">{{ config_json if config_json else '' }}</textarea>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const editor = document.getElementById('jsonEditor');
+        const alertBox = document.getElementById('alertBox');
+        const statusIndicator = document.getElementById('statusIndicator');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!editor.value.trim()) {
+                loadConfig();
+            }
+        });
+
+        editor.addEventListener('keydown', function (e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+
+                this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 4;
+
+                markUnsaved();
+            }
+        });
+
+        editor.addEventListener('input', markUnsaved);
+
+        function markUnsaved() {
+            statusIndicator.innerHTML = '<span class="status-dot status-unsaved"></span>Unsaved changes';
+            statusIndicator.style.color = 'var(--warning)';
+        }
+
+        async function loadConfig() {
+            try {
+                showAlert('Loading current configuration...', 'info');
+                const response = await fetch('/api/config');
+                if (!response.ok) throw new Error(`Error ${response.status}: Failed to load file.`);
+
+                const data = await response.json();
+                editor.value = JSON.stringify(data, null, 4);
+
+                statusIndicator.innerHTML = '<span class="status-dot status-synced"></span>Synced';
+                statusIndicator.style.color = 'var(--text-main)';
+                showAlert('Configuration loaded successfully.', 'success');
+            } catch (error) {
+                showAlert(error.message, 'error');
+                statusIndicator.innerHTML = '<span class="status-dot status-error"></span>Load Error';
+                statusIndicator.style.color = 'var(--danger)';
+            }
+        }
+
+        function formatJSON() {
+            try {
+                const parsed = JSON.parse(editor.value);
+
+                if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+                    throw new Error("Content must be a JSON object (e.g., { ... })");
+                }
+
+                editor.value = JSON.stringify(parsed, null, 4);
+                showAlert('JSON formatted successfully.', 'info');
+            } catch (error) {
+                showAlert('Invalid JSON syntax: ' + error.message, 'error');
+            }
+        }
+
+        async function saveConfig() {
+            let parsedData;
+
+            try {
+                parsedData = JSON.parse(editor.value);
+
+                if (typeof parsedData !== 'object' || parsedData === null || Array.isArray(parsedData)) {
+                    throw new Error("JSON must be a root object (e.g., { \"variable\": \"value\" })");
+                }
+            } catch (error) {
+                showAlert('Cannot save: Invalid JSON syntax.\n' + error.message, 'error');
+                return;
+            }
+
+            try {
+                showAlert('Saving changes...', 'info');
+                const response = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(parsedData)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    const detail = typeof result.detail === 'object' ? JSON.stringify(result.detail) : result.detail;
+                    throw new Error(detail || 'Error saving configuration');
+                }
+
+                statusIndicator.innerHTML = '<span class="status-dot status-synced"></span>Synced';
+                statusIndicator.style.color = 'var(--text-main)';
+                showAlert('Configuration saved and integrated successfully!', 'success');
+            } catch (error) {
+                showAlert('Error saving: ' + error.message, 'error');
+                statusIndicator.innerHTML = '<span class="status-dot status-error"></span>Save Error';
+                statusIndicator.style.color = 'var(--danger)';
+            }
+        }
+
+        function showAlert(message, type) {
+            alertBox.style.display = 'block';
+            alertBox.className = 'alert-box alert-' + type;
+            alertBox.innerText = message;
+
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => { alertBox.style.display = 'none'; }, 4000);
+            }
+        }
+    </script>
+</body>
+
+</html>

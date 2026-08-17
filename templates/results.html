@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - BugBounty Recon Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-body: #050608;
+            --bg-card: #0b0c10;
+            --bg-sidebar: #07080b;
+            --border-color: #161822;
+            --border-hover: #262938;
+
+            --primary-accent: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --cyan-accent: #06b6d4;
+
+            --text-main: #f3f4f6;
+            --text-muted: #6b7280;
+            --text-subtle: #9ca3af;
+
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #ec4899 0%, #f97316 40%, #8b5cf6 100%);
+            z-index: 9999;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 250px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 16px;
+            flex-shrink: 0;
+            z-index: 10;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            margin-bottom: 24px;
+            padding-top: 4px;
+        }
+
+        .brand-icon {
+            width: 30px;
+            height: 30px;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--cyan-accent);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+
+        .nav-item a:hover {
+            color: var(--text-main);
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-item.active a {
+            background-color: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.875rem;
+        }
+
+        .avatar {
+            width: 30px;
+            height: 30px;
+            background-color: var(--primary-accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            color: #ffffff;
+        }
+
+        .logout-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.8125rem;
+            transition: color 0.2s;
+        }
+
+        .logout-btn:hover {
+            color: var(--danger);
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-y: auto;
+            min-width: 0;
+        }
+
+        .content-body {
+            padding: 32px 40px;
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .target-selector-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-input {
+            padding: 8px 12px;
+            background-color: #08090d;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px 20px;
+            position: relative;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .stat-desc {
+            font-size: 0.75rem;
+            color: var(--success);
+            margin-top: 4px;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-main);
+        }
+
+        .input-wrapper-search {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .input-wrapper-search i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .input-wrapper-search input {
+            padding-left: 36px;
+            width: 100%;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background-color: var(--bg-card);
+        }
+
+        .table-container {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .table-container th {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background-color: rgba(255, 255, 255, 0.01);
+        }
+
+        .table-container td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.875rem;
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        .table-container tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table-container tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .mono-text {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .link-action {
+            color: var(--cyan-accent);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.15s;
+        }
+
+        .link-action:hover {
+            color: #22d3ee;
+            text-decoration: underline;
+        }
+
+        .tabs-nav {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            color: var(--cyan-accent);
+            border-bottom-color: var(--cyan-accent);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.725rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .badge-info {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--cyan-accent);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .badge-critical {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .badge-high {
+            background: rgba(249, 115, 22, 0.15);
+            color: #f97316;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .badge-medium {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-low {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .badge-info-sev {
+            background: rgba(6, 182, 212, 0.15);
+            color: #06b6d4;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+    </style>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div>
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg>
+                </div>
+                <span>Bugbounty_reconV</span>
+            </div>
+
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                        </svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="/results">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                        Results
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/settings">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="3" />
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                        Settings
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="user-profile">
+            <div class="user-info">
+                <div class="avatar">{{ user[0].upper() if user else 'U' }}</div>
+                <span>{{ user if user else 'User' }}</span>
+            </div>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="content-body">
+
+            <!-- HEADER -->
+            <header class="page-header">
+                <div>
+                    <h1 class="page-title">Recon report</h1>
+                    <div style="font-size: 0.875rem; color: var(--text-muted); margin-top: 4px;">
+                        Current Target: <span id="objectiveName" style="color: var(--cyan-accent);"
+                            class="mono-text">-</span>
+                    </div>
+                </div>
+                <div class="target-selector-wrapper">
+                    <label for="targetSelect" style="font-size: 0.875rem; color: var(--text-muted);">Select
+                        Scan:</label>
+                    <select id="targetSelect" class="filter-input" onchange="onTargetChange(this.value)">
+                        {% if targets %}
+                        {% for t in targets %}
+                        <option value="{{ t }}">{{ t }}</option>
+                        {% endfor %}
+                        {% else %}
+                        <option value="">No scans available</option>
+                        {% endif %}
+                    </select>
+                </div>
+            </header>
+
+            <!-- TABS NAVIGATION -->
+            <div class="tabs-nav">
+                <button class="tab-btn active" onclick="switchTab('dashboard', event)"><i
+                        class="fa-solid fa-chart-pie"></i> Summary</button>
+                <button class="tab-btn" onclick="switchTab('subdomains', event)"><i class="fa-solid fa-sitemap"></i>
+                    Subdomains</button>
+                <button class="tab-btn" onclick="switchTab('vulnerabilities', event)"><i
+                        class="fa-solid fa-triangle-exclamation"></i>
+                    Vulnerabilities <span id="vulnCountBadge" class="badge badge-info"
+                        style="margin-left: 6px; padding: 2px 6px; font-size: 0.65rem;">0</span></button>
+                <button class="tab-btn" onclick="switchTab('ports', event)"><i class="fa-solid fa-network-wired"></i>
+                    Ports</button>
+                <button class="tab-btn" onclick="switchTab('waf', event)"><i class="fa-solid fa-shield-halved"></i>
+                    WAF</button>
+                <button class="tab-btn" onclick="switchTab('endpoints', event)"><i class="fa-solid fa-link"></i>
+                    Endpoints</button>
+                <button class="tab-btn" onclick="switchTab('webservers', event)"><i class="fa-solid fa-server"></i>
+                    Web Servers</button>
+            </div>
+
+            <!-- TAB 1: DASHBOARD / SUMMARY -->
+            <section id="tab-dashboard" class="tab-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Subdomains</div>
+                        <div class="stat-value" id="statSubdomains">-</div>
+                        <div class="stat-desc"><i class="fa-solid fa-arrow-up"></i> Detected</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active Hosts (200 OK)</div>
+                        <div class="stat-value" id="statHttp200">-</div>
+                        <div class="stat-desc" style="color: var(--cyan-accent);">Online</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Unique IPs</div>
+                        <div class="stat-value" id="statIps">-</div>
+                        <div class="stat-desc" style="color: var(--primary-accent);">Infrastructure</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Extracted Endpoints</div>
+                        <div class="stat-value" id="statEndpoints">-</div>
+                        <div class="stat-desc" style="color: var(--text-muted);">Routes & parameters</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
+                    <div class="card">
+                        <h3 class="card-title">WAF / Perimeter Distribution</h3>
+                        <div style="position: relative; height: 260px;">
+                            <canvas id="wafChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 class="card-title">HTTP Status Codes</h3>
+                        <div style="position: relative; height: 260px;">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: SUBDOMAINS -->
+            <section id="tab-subdomains" class="tab-content" style="display: none;">
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                        <h3 class="card-title" style="margin-bottom: 0;">Discovered Subdomains</h3>
+                        <div class="input-wrapper-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="filterSubdomains" placeholder="Filter subdomains..."
+                                onkeyup="filterTable('subdomainsTable', 'filterSubdomains')" class="filter-input">
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="subdomainsTable" class="table-container">
+                            <thead>
+                                <tr>
+                                    <th>Subdomain / Host</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="subdomainsTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: VULNERABILITIES -->
+            <section id="tab-vulnerabilities" class="tab-content" style="display: none;">
+                <div class="stats-grid"
+                    style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-bottom: 20px;">
+                    <div class="stat-card" style="border-left: 4px solid var(--danger);">
+                        <div class="stat-label">Critical</div>
+                        <div class="stat-value" id="statCrit">-</div>
+                    </div>
+                    <div class="stat-card" style="border-left: 4px solid #f97316;">
+                        <div class="stat-label">High</div>
+                        <div class="stat-value" id="statHigh">-</div>
+                    </div>
+                    <div class="stat-card" style="border-left: 4px solid var(--warning);">
+                        <div class="stat-label">Medium</div>
+                        <div class="stat-value" id="statMed">-</div>
+                    </div>
+                    <div class="stat-card" style="border-left: 4px solid var(--cyan-accent);">
+                        <div class="stat-label">Low / Info</div>
+                        <div class="stat-value" id="statLowInfo">-</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                        <h3 class="card-title" style="margin-bottom: 0;">Vulnerability Findings (Nuclei)</h3>
+                        <div class="input-wrapper-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="filterVulnerabilities" placeholder="Filter vulnerabilities..."
+                                onkeyup="filterTable('vulnerabilitiesTable', 'filterVulnerabilities')"
+                                class="filter-input">
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="vulnerabilitiesTable" class="table-container">
+                            <thead>
+                                <tr>
+                                    <th>Severity</th>
+                                    <th>Template ID</th>
+                                    <th>Name / Description</th>
+                                    <th>Matched At</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vulnerabilitiesTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: PORTS AND SERVICES -->
+            <section id="tab-ports" class="tab-content" style="display: none;">
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                        <h3 class="card-title" style="margin-bottom: 0;">Ports & Services</h3>
+                        <div class="input-wrapper-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="filterPorts" placeholder="Filter ports..."
+                                onkeyup="filterTable('portsTable', 'filterPorts')" class="filter-input">
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="portsTable" class="table-container">
+                            <thead>
+                                <tr>
+                                    <th>Host / Subdomain</th>
+                                    <th>Open Ports</th>
+                                </tr>
+                            </thead>
+                            <tbody id="portsTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: WAF DETECTION -->
+            <section id="tab-waf" class="tab-content" style="display: none;">
+                <div class="card">
+                    <h3 class="card-title">WAF Detection Results</h3>
+                    <div id="wafGridContainer"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: ENDPOINTS -->
+            <section id="tab-endpoints" class="tab-content" style="display: none;">
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                        <h3 class="card-title" style="margin-bottom: 0;">Detected Endpoints & URLs</h3>
+                        <div class="input-wrapper-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="filterEndpoints" placeholder="Filter endpoints..."
+                                onkeyup="filterTable('endpointsTable', 'filterEndpoints')" class="filter-input">
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="endpointsTable" class="table-container">
+                            <thead>
+                                <tr>
+                                    <th>Endpoint URL / Path</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="endpointsTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: WEB SERVERS -->
+            <section id="tab-webservers" class="tab-content" style="display: none;">
+                <div class="card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                        <h3 class="card-title" style="margin-bottom: 0;">Web Server Analysis (Httpx Probing)</h3>
+                        <div class="input-wrapper-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="filterWebservers" placeholder="Filter servers..."
+                                onkeyup="filterTable('webserversTable', 'filterWebservers')" class="filter-input">
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="webserversTable" class="table-container">
+                            <thead>
+                                <tr>
+                                    <th>URL / Host</th>
+                                    <th>Status</th>
+                                    <th>Web Server / Tech</th>
+                                    <th>IP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="webserversTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        let wafChartInstance = null;
+        let statusChartInstance = null;
+
+        function switchTab(tabId, event) {
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.getElementById('tab-' + tabId).style.display = 'block';
+
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
+        function filterTable(tableId, inputId) {
+            const input = document.getElementById(inputId);
+            const filter = input.value.toLowerCase();
+            const table = document.getElementById(tableId);
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                let found = false;
+                let tds = tr[i].getElementsByTagName("td");
+                for (let j = 0; j < tds.length; j++) {
+                    if (tds[j]) {
+                        let txtValue = tds[j].textContent || tds[j].innerText;
+                        if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                tr[i].style.display = found ? "" : "none";
+            }
+        }
+
+        async function onTargetChange(targetName) {
+            if (!targetName) return;
+            document.getElementById('objectiveName').textContent = targetName;
+
+            try {
+                const response = await fetch(`/api/target/${encodeURIComponent(targetName)}/details`);
+                if (!response.ok) throw new Error("Could not load scan data.");
+                const data = await response.json();
+                renderDashboardData(data);
+            } catch (err) {
+                console.error("Error loading details:", err);
+            }
+        }
+
+        function renderDashboardData(data) {
+            document.getElementById('statSubdomains').textContent = data.summary.total_subdomains || 0;
+            document.getElementById('statHttp200').textContent = data.summary.http_200 || 0;
+            document.getElementById('statIps').textContent = data.summary.unique_ips || 0;
+            document.getElementById('statEndpoints').textContent = data.summary.total_endpoints || 0;
+
+            const vStats = data.summary.vuln_stats || { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+            document.getElementById('statCrit').textContent = vStats.critical || 0;
+            document.getElementById('statHigh').textContent = vStats.high || 0;
+            document.getElementById('statMed').textContent = vStats.medium || 0;
+            document.getElementById('statLowInfo').textContent = (vStats.low || 0) + (vStats.info || 0);
+
+            const totalVulns = (vStats.critical || 0) + (vStats.high || 0) + (vStats.medium || 0) + (vStats.low || 0) + (vStats.info || 0);
+            document.getElementById('vulnCountBadge').textContent = totalVulns;
+
+            const vulnBody = document.getElementById('vulnerabilitiesTableBody');
+            vulnBody.innerHTML = '';
+            if (data.vulnerabilities && data.vulnerabilities.length > 0) {
+                data.vulnerabilities.forEach(v => {
+                    let badgeClass = 'badge-info-sev';
+                    const sev = (v.severity || 'info').toLowerCase();
+                    if (sev === 'critical') badgeClass = 'badge-critical';
+                    else if (sev === 'high') badgeClass = 'badge-high';
+                    else if (sev === 'medium') badgeClass = 'badge-medium';
+                    else if (sev === 'low') badgeClass = 'badge-low';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><span class="badge ${badgeClass}">${v.severity.toUpperCase()}</span></td>
+                        <td class="mono-text" style="font-size: 0.8125rem;">${v.template_id}</td>
+                        <td style="font-size: 0.875rem;">${v.name}</td>
+                        <td class="mono-text" style="font-size: 0.8125rem; color: var(--cyan-accent); word-break: break-all;">${v.matched_at}</td>
+                    `;
+                    vulnBody.appendChild(tr);
+                });
+            } else {
+                vulnBody.innerHTML = `<tr><td colspan="4" class="no-data">No vulnerabilities found.</td></tr>`;
+            }
+
+            const subBody = document.getElementById('subdomainsTableBody');
+            subBody.innerHTML = '';
+            if (data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="mono-text">${item.subdomain}</td>
+                        <td><a href="https://${item.subdomain}" target="_blank" class="link-action"><i class="fa-solid fa-external-link"></i></a></td>
+                    `;
+                    subBody.appendChild(tr);
+                });
+            } else {
+                subBody.innerHTML = `<tr><td colspan="2" class="no-data">No subdomains found.</td></tr>`;
+            }
+
+            const portsBody = document.getElementById('portsTableBody');
+            portsBody.innerHTML = '';
+            const itemsWithPorts = data.items.filter(i => i.ports && i.ports.length > 0);
+            if (itemsWithPorts.length > 0) {
+                itemsWithPorts.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="mono-text">${item.subdomain}</td>
+                        <td style="color: var(--success);" class="mono-text">${item.ports.join(', ')}</td>
+                    `;
+                    portsBody.appendChild(tr);
+                });
+            } else {
+                portsBody.innerHTML = `<tr><td colspan="2" class="no-data">No open ports recorded.</td></tr>`;
+            }
+
+            const wafGrid = document.getElementById('wafGridContainer');
+            wafGrid.innerHTML = '';
+            if (data.wafs && data.wafs.length > 0) {
+                data.wafs.forEach(w => {
+                    const div = document.createElement('div');
+                    div.style.cssText = "background-color: #08090d; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: center;";
+                    div.innerHTML = `
+                        <div>
+                            <div class="mono-text" style="font-size: 0.8125rem;">${w.target}</div>
+                            <div style="font-size: 0.75rem; color: var(--cyan-accent); margin-top: 4px;">${w.waf}</div>
+                        </div>
+                        <span class="badge badge-info">Protected</span>
+                    `;
+                    wafGrid.appendChild(div);
+                });
+            } else {
+                wafGrid.innerHTML = `<div class="no-data" style="grid-column: 1 / -1;">No specific WAF technologies detected.</div>`;
+            }
+
+            const endBody = document.getElementById('endpointsTableBody');
+            endBody.innerHTML = '';
+            if (data.endpoints && data.endpoints.length > 0) {
+                data.endpoints.slice(0, 100).forEach(e => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="mono-text" style="font-size: 0.8125rem; word-break: break-all;">${e.url}</td>
+                        <td><a href="${e.url}" target="_blank" class="link-action" style="font-size: 0.8125rem;"><i class="fa-solid fa-external-link"></a></td>
+                    `;
+                    endBody.appendChild(tr);
+                });
+            } else {
+                endBody.innerHTML = `<tr><td colspan="2" class="no-data">No endpoints found.</td></tr>`;
+            }
+
+            const webBody = document.getElementById('webserversTableBody');
+            webBody.innerHTML = '';
+            if (data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    let statusBadge = 'badge-info';
+                    if (item.status_code === 200) statusBadge = 'badge-success';
+                    else if (item.status_code && item.status_code !== '-') statusBadge = 'badge-warning';
+
+                    const serverText = item.webserver && item.webserver !== '-' ? item.webserver : (item.techs && item.techs.length > 0 ? item.techs.join(', ') : '-');
+                    const ipText = item.ip && item.ip !== '-' ? item.ip : '-';
+                    const statusCodeText = item.status_code && item.status_code !== '-' ? item.status_code : '-';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="mono-text" style="font-size: 0.8125rem;"><a href="https://${item.subdomain}" target="_blank" class="link-action">https://${item.subdomain}</a></td>
+                        <td><span class="badge ${statusBadge}">${statusCodeText}</span></td>
+                        <td style="font-size: 0.8125rem; color: var(--text-muted);">${serverText}</td>
+                        <td class="mono-text" style="font-size: 0.8125rem; color: var(--cyan-accent);">${ipText}</td>
+                    `;
+                    webBody.appendChild(tr);
+                });
+            } else {
+                webBody.innerHTML = `<tr><td colspan="4" class="no-data">No web server data.</td></tr>`;
+            }
+
+            updateCharts(data);
+        }
+
+        function updateCharts(data) {
+            const ctxWaf = document.getElementById('wafChart').getContext('2d');
+            if (wafChartInstance) wafChartInstance.destroy();
+
+            let wafCounts = {};
+            if (data.wafs && data.wafs.length > 0) {
+                data.wafs.forEach(w => {
+                    wafCounts[w.waf] = (wafCounts[w.waf] || 0) + 1;
+                });
+            } else {
+                wafCounts['No WAF / Unknown'] = data.summary.total_subdomains || 1;
+            }
+
+            wafChartInstance = new Chart(ctxWaf, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(wafCounts),
+                    datasets: [{
+                        data: Object.values(wafCounts),
+                        backgroundColor: ['#f59e0b', '#3b82f6', '#f97316', '#06b6d4', '#64748b', '#8b5cf6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', font: { family: 'Inter' } } } }
+                }
+            });
+
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            if (statusChartInstance) statusChartInstance.destroy();
+
+            let code200 = 0, code401 = 0, code403 = 0, code404 = 0, codeOther = 0;
+            if (data.items) {
+                data.items.forEach(i => {
+                    if (i.status_code === 200) code200++;
+                    else if (i.status_code === 401) code401++;
+                    else if (i.status_code === 403) code403++;
+                    else if (i.status_code === 404) code404++;
+                    else if (i.status_code && i.status_code !== '-') codeOther++;
+                });
+            }
+
+            statusChartInstance = new Chart(ctxStatus, {
+                type: 'bar',
+                data: {
+                    labels: ['200 OK', '401 Auth', '403 Forbidden', '404 Not Found', 'Other'],
+                    datasets: [{
+                        label: 'Count',
+                        data: [code200, code401, code403, code404, codeOther],
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#9ca3af' }, grid: { color: '#161822' } },
+                        y: { ticks: { color: '#9ca3af' }, grid: { color: '#161822' } }
+                    }
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const select = document.getElementById('targetSelect');
+            if (select && select.value) {
+                onTargetChange(select.value);
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,41 @@
+{
+    "telegram_notifications": false,
+    "telegram_bot_token": "",
+    "telegram_chat_id": "",
+    "threads": 50,
+    "timeout": 300,
+    "rate_limit": 5,
+    "waf_detection": true,
+    "nuclei_scan": true,
+    "nuclei_timeout": 120,
+    "nuclei_rate_limit": 5,
+    "nuclei_process_timeout": 1800,
+    "gau_timeout": 300,
+    "waybackurls_timeout": 300,
+    "katana_timeout": 300,
+    "nmap_timeout": 120,
+    "nmap_top_ports": 1000,
+    "filter_extensions": true,
+    "extensions_to_exclude": [
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".css",
+        ".js",
+        ".svg",
+        ".woff",
+        ".woff2",
+        ".ico"
+    ],
+    "filter_status_codes": true,
+    "interesting_status_codes": [
+        200,
+        301,
+        302,
+        403,
+        404,
+        500,
+        503
+    ]
+}
