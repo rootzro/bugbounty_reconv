@@ -56,7 +56,7 @@ The fastest and recommended way to deploy the platform is using Docker.
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/bugbounty_reconv.git
+   git clone https://github.com/rootzro/bugbounty_reconv.git
    cd bugbounty_reconv
    ```
 
