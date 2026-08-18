@@ -1096,11 +1096,49 @@
             document.getElementById('vulnModal').classList.remove('active');
         }
 
+        function resetDashboardUI() {
+            rawDashboardData = null;
+            currentSubdomainsList = [];
+            currentEndpointsList = [];
+
+            document.getElementById('statSubdomains').textContent = '0';
+            document.getElementById('statHttp200').textContent = '0';
+            document.getElementById('statIps').textContent = '0';
+            document.getElementById('statEndpoints').textContent = '0';
+
+            document.getElementById('statCrit').textContent = '0';
+            document.getElementById('statHigh').textContent = '0';
+            document.getElementById('statMed').textContent = '0';
+            document.getElementById('statLowInfo').textContent = '0';
+            document.getElementById('vulnCountBadge').textContent = '0';
+
+            document.getElementById('vulnerabilitiesTableBody').innerHTML = `<tr><td colspan="5" class="no-data">No vulnerabilities found.</td></tr>`;
+            document.getElementById('subdomainsTableBody').innerHTML = `<tr><td colspan="3" class="no-data">No subdomains found.</td></tr>`;
+            document.getElementById('portsTableBody').innerHTML = `<tr><td colspan="2" class="no-data">No open ports recorded.</td></tr>`;
+            document.getElementById('wafGridContainer').innerHTML = `<div class="no-data" style="grid-column: 1 / -1;">No specific WAF technologies detected.</div>`;
+            document.getElementById('endpointsTableBody').innerHTML = `<tr><td colspan="2" class="no-data">No endpoints found.</td></tr>`;
+            document.getElementById('webserversTableBody').innerHTML = `<tr><td colspan="4" class="no-data">No web server data.</td></tr>`;
+
+            if (wafChartInstance) {
+                wafChartInstance.destroy();
+                wafChartInstance = null;
+            }
+            if (statusChartInstance) {
+                statusChartInstance.destroy();
+                statusChartInstance = null;
+            }
+        }
+
         async function onTargetChange(targetName) {
-            if (!targetName) return;
+            const select = document.getElementById('targetSelect');
+
+            if (!targetName) {
+                document.getElementById('objectiveName').textContent = 'No scans available';
+                resetDashboardUI();
+                return;
+            }
 
             // Sincronizar select si la función fue llamada directamente
-            const select = document.getElementById('targetSelect');
             if (select && select.value !== targetName) {
                 select.value = targetName;
             }
@@ -1120,6 +1158,7 @@
                 renderDashboardData(data);
             } catch (err) {
                 console.error("Error loading details:", err);
+                resetDashboardUI();
             }
         }
 
@@ -1188,7 +1227,7 @@
 
             const portsBody = document.getElementById('portsTableBody');
             portsBody.innerHTML = '';
-            const itemsWithPorts = data.items.filter(i => i.ports && i.ports.length > 0);
+            const itemsWithPorts = data.items ? data.items.filter(i => i.ports && i.ports.length > 0) : [];
             if (itemsWithPorts.length > 0) {
                 itemsWithPorts.forEach(item => {
                     const tr = document.createElement('tr');
@@ -1352,21 +1391,32 @@
         window.addEventListener('DOMContentLoaded', () => {
             const select = document.getElementById('targetSelect');
 
-            // 1. Prioridad: Obtener target desde la URL (?target=xxx)
-            const urlParams = new URLSearchParams(window.location.search);
-            let target = urlParams.get('target');
+            // 1. Get valid selector options
+            const validOptions = select ? Array.from(select.options).map(opt => opt.value).filter(val => val !== "") : [];
 
-            // 2. Segunda prioridad: Obtener desde localStorage
-            if (!target) {
-                target = localStorage.getItem('target') || localStorage.getItem('selectedTarget');
+            if (validOptions.length === 0) {
+                localStorage.removeItem('target');
+                localStorage.removeItem('selectedTarget');
+                sessionStorage.removeItem('target');
+                onTargetChange(null);
+                return;
             }
 
-            // 3. Cargar el target indicado si existe, o usar el primer valor por defecto
-            if (target) {
-                if (select) select.value = target;
+            // 2. Get URL parameter (?target=xxx) or Storage
+            const urlParams = new URLSearchParams(window.location.search);
+            let target = urlParams.get('target') || localStorage.getItem('target') || localStorage.getItem('selectedTarget') || sessionStorage.getItem('target');
+
+            // 3. Verify if the target obtained really exists among the server options
+            if (target && validOptions.includes(target)) {
+                select.value = target;
                 onTargetChange(target);
-            } else if (select && select.value) {
-                onTargetChange(select.value);
+            } else {
+                // If the saved target no longer exists in the backend, clean storage and use the first option
+                localStorage.removeItem('target');
+                localStorage.removeItem('selectedTarget');
+                sessionStorage.removeItem('target');
+                select.value = validOptions[0];
+                onTargetChange(validOptions[0]);
             }
         });
     </script>
