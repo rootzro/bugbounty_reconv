@@ -225,6 +225,35 @@
             box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
         }
 
+        .btn-download-group {
+            display: flex;
+            gap: 4px;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2px;
+        }
+
+        .btn-download {
+            background-color: transparent;
+            border: none;
+            border-radius: 6px;
+            color: var(--text-muted);
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-download:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -288,7 +317,8 @@
 
         .input-wrapper-search {
             position: relative;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
             width: 100%;
             max-width: 300px;
         }
@@ -457,6 +487,101 @@
             border: 1px solid rgba(6, 182, 212, 0.3);
         }
 
+        .badge-new {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            margin-left: 8px;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+        }
+
+        .filter-chip {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .filter-chip:hover,
+        .filter-chip.active {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            border-color: var(--border-hover);
+        }
+
+        /* MODAL VULNERABILIDADES */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .code-block {
+            background-color: #030405;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8125rem;
+            color: #a7f3d0;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
         .no-data {
             text-align: center;
             padding: 24px;
@@ -614,10 +739,23 @@
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
                         <h3 class="card-title" style="margin-bottom: 0;">Discovered Subdomains</h3>
-                        <div class="input-wrapper-search">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="filterSubdomains" placeholder="Filter subdomains..."
-                                onkeyup="filterTable('subdomainsTable', 'filterSubdomains')" class="filter-input">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="input-wrapper-search">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="filterSubdomains" placeholder="Filter subdomains..."
+                                    onkeyup="filterTable('subdomainsTable', 'filterSubdomains')" class="filter-input">
+                            </div>
+                            <div class="btn-download-group">
+                                <button class="btn-download" onclick="exportData('subdomains', 'txt')" title="TXT">
+                                    <i class="fa-solid fa-file-lines"></i> TXT
+                                </button>
+                                <button class="btn-download" onclick="exportData('subdomains', 'csv')" title="CSV">
+                                    <i class="fa-solid fa-file-csv"></i> CSV
+                                </button>
+                                <button class="btn-download" onclick="exportData('subdomains', 'json')" title="JSON">
+                                    <i class="fa-solid fa-code"></i> JSON
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="table-wrapper">
@@ -625,6 +763,7 @@
                             <thead>
                                 <tr>
                                     <th>Subdomain / Host</th>
+                                    <th>Status / Flags</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -674,6 +813,7 @@
                                     <th>Template ID</th>
                                     <th>Name / Description</th>
                                     <th>Matched At</th>
+                                    <th>Details</th>
                                 </tr>
                             </thead>
                             <tbody id="vulnerabilitiesTableBody">
@@ -723,10 +863,23 @@
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
                         <h3 class="card-title" style="margin-bottom: 0;">Detected Endpoints & URLs</h3>
-                        <div class="input-wrapper-search">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="filterEndpoints" placeholder="Filter endpoints..."
-                                onkeyup="filterTable('endpointsTable', 'filterEndpoints')" class="filter-input">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div class="input-wrapper-search">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="filterEndpoints" placeholder="Filter endpoints..."
+                                    onkeyup="filterTable('endpointsTable', 'filterEndpoints')" class="filter-input">
+                            </div>
+                            <div class="btn-download-group">
+                                <button class="btn-download" onclick="exportData('endpoints', 'txt')" title="TXT">
+                                    <i class="fa-solid fa-file-lines"></i> TXT
+                                </button>
+                                <button class="btn-download" onclick="exportData('endpoints', 'csv')" title="CSV">
+                                    <i class="fa-solid fa-file-csv"></i> CSV
+                                </button>
+                                <button class="btn-download" onclick="exportData('endpoints', 'json')" title="JSON">
+                                    <i class="fa-solid fa-code"></i> JSON
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="table-wrapper">
@@ -749,10 +902,18 @@
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
                         <h3 class="card-title" style="margin-bottom: 0;">Web Server Analysis (Httpx Probing)</h3>
-                        <div class="input-wrapper-search">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" id="filterWebservers" placeholder="Filter servers..."
-                                onkeyup="filterTable('webserversTable', 'filterWebservers')" class="filter-input">
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: nowrap;">
+                            <div style="display: flex; gap: 6px; align-items: center;">
+                                <button class="filter-chip active" onclick="filterStatus('ALL', this)">All</button>
+                                <button class="filter-chip" onclick="filterStatus('200', this)">200 OK</button>
+                                <button class="filter-chip" onclick="filterStatus('403', this)">403 Forbidden</button>
+                                <button class="filter-chip" onclick="filterStatus('500', this)">500 Error</button>
+                            </div>
+                            <div class="input-wrapper-search">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="filterWebservers" placeholder="Filter servers..."
+                                    onkeyup="filterTable('webserversTable', 'filterWebservers')" class="filter-input">
+                            </div>
                         </div>
                     </div>
                     <div class="table-wrapper">
@@ -775,9 +936,49 @@
         </div>
     </main>
 
+    <div id="vulnModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="modalSevBadge" class="badge badge-critical">CRITICAL</span>
+                    <h3 id="modalTitle" style="font-size: 1.1rem; font-weight: 600;">Vulnerability Details</h3>
+                </div>
+                <button onclick="closeVulnModal()"
+                    style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <label
+                        style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Matched
+                        URL / Endpoint</label>
+                    <div id="modalMatchedAt" class="mono-text"
+                        style="color: var(--cyan-accent); font-size: 0.875rem; margin-top: 4px;">-</div>
+                </div>
+                <div>
+                    <label
+                        style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Template
+                        ID</label>
+                    <div id="modalTemplateId" class="mono-text"
+                        style="color: var(--text-main); font-size: 0.875rem; margin-top: 4px;">-</div>
+                </div>
+                <div>
+                    <label
+                        style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Proof
+                        of Concept / Payload details</label>
+                    <pre id="modalPoc" class="code-block">No additional proof of concept recorded.</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         let wafChartInstance = null;
         let statusChartInstance = null;
+        let currentSubdomainsList = [];
+        let currentEndpointsList = [];
+        let rawDashboardData = null;
 
         function switchTab(tabId, event) {
             document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
@@ -809,6 +1010,93 @@
             }
         }
 
+        // Filtro de estado HTTP rápido
+        function filterStatus(code, btn) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+
+            const table = document.getElementById('webserversTable');
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                if (code === 'ALL') {
+                    tr[i].style.display = "";
+                    continue;
+                }
+                const statusTd = tr[i].getElementsByTagName("td")[1];
+                if (statusTd) {
+                    const txt = statusTd.textContent || statusTd.innerText;
+                    tr[i].style.display = txt.trim() === code ? "" : "none";
+                }
+            }
+        }
+
+        // Exportación multiformato (TXT, CSV, JSON)
+        function exportData(type, format) {
+            const targetSelect = document.getElementById('targetSelect');
+            const targetName = targetSelect ? targetSelect.value : 'target';
+
+            let dataList = type === 'subdomains' ? currentSubdomainsList : currentEndpointsList;
+
+            if (!dataList || dataList.length === 0) {
+                alert(`No ${type} available to export.`);
+                return;
+            }
+
+            let fileContent = "";
+            let mimeType = "text/plain";
+            let filename = `${targetName}_${type}.${format}`;
+
+            if (format === 'txt') {
+                fileContent = dataList.join('\n');
+            } else if (format === 'json') {
+                fileContent = JSON.stringify(dataList, null, 2);
+                mimeType = "application/json";
+            } else if (format === 'csv') {
+                fileContent = "Target,Item\n" + dataList.map(item => `"${targetName}","${item}"`).join('\n');
+                mimeType = "text/csv";
+            }
+
+            const blob = new Blob([fileContent], { type: `${mimeType};charset=utf-8` });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+
+        // Modal de Vulnerabilidades
+        function openVulnModal(index) {
+            if (!rawDashboardData || !rawDashboardData.vulnerabilities || !rawDashboardData.vulnerabilities[index]) return;
+            const v = rawDashboardData.vulnerabilities[index];
+
+            const sev = (v.severity || 'info').toLowerCase();
+            let badgeClass = 'badge-info-sev';
+            if (sev === 'critical') badgeClass = 'badge-critical';
+            else if (sev === 'high') badgeClass = 'badge-high';
+            else if (sev === 'medium') badgeClass = 'badge-medium';
+            else if (sev === 'low') badgeClass = 'badge-low';
+
+            const modalBadge = document.getElementById('modalSevBadge');
+            modalBadge.className = `badge ${badgeClass}`;
+            modalBadge.textContent = (v.severity || 'INFO').toUpperCase();
+
+            document.getElementById('modalTitle').textContent = v.name || 'Vulnerability details';
+            document.getElementById('modalMatchedAt').textContent = v.matched_at || '-';
+            document.getElementById('modalTemplateId').textContent = v.template_id || '-';
+
+            const pocText = v.curl_command || v.request || v.extracted_results || v.poc || "No specific request/response captured.";
+            document.getElementById('modalPoc').textContent = pocText;
+
+            document.getElementById('vulnModal').classList.add('active');
+        }
+
+        function closeVulnModal() {
+            document.getElementById('vulnModal').classList.remove('active');
+        }
+
         async function onTargetChange(targetName) {
             if (!targetName) return;
             document.getElementById('objectiveName').textContent = targetName;
@@ -817,6 +1105,7 @@
                 const response = await fetch(`/api/target/${encodeURIComponent(targetName)}/details`);
                 if (!response.ok) throw new Error("Could not load scan data.");
                 const data = await response.json();
+                rawDashboardData = data;
                 renderDashboardData(data);
             } catch (err) {
                 console.error("Error loading details:", err);
@@ -841,7 +1130,7 @@
             const vulnBody = document.getElementById('vulnerabilitiesTableBody');
             vulnBody.innerHTML = '';
             if (data.vulnerabilities && data.vulnerabilities.length > 0) {
-                data.vulnerabilities.forEach(v => {
+                data.vulnerabilities.forEach((v, idx) => {
                     let badgeClass = 'badge-info-sev';
                     const sev = (v.severity || 'info').toLowerCase();
                     if (sev === 'critical') badgeClass = 'badge-critical';
@@ -855,26 +1144,35 @@
                         <td class="mono-text" style="font-size: 0.8125rem;">${v.template_id}</td>
                         <td style="font-size: 0.875rem;">${v.name}</td>
                         <td class="mono-text" style="font-size: 0.8125rem; color: var(--cyan-accent); word-break: break-all;">${v.matched_at}</td>
+                        <td>
+                            <button onclick="openVulnModal(${idx})" class="link-action" style="background:none; border:none; cursor:pointer;">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </td>
                     `;
                     vulnBody.appendChild(tr);
                 });
             } else {
-                vulnBody.innerHTML = `<tr><td colspan="4" class="no-data">No vulnerabilities found.</td></tr>`;
+                vulnBody.innerHTML = `<tr><td colspan="5" class="no-data">No vulnerabilities found.</td></tr>`;
             }
 
             const subBody = document.getElementById('subdomainsTableBody');
             subBody.innerHTML = '';
+            currentSubdomainsList = [];
             if (data.items && data.items.length > 0) {
                 data.items.forEach(item => {
+                    currentSubdomainsList.push(item.subdomain);
+                    const isNewBadge = item.is_new ? `<span class="badge badge-new">NEW</span>` : '';
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td class="mono-text">${item.subdomain}</td>
+                        <td class="mono-text">${item.subdomain} ${isNewBadge}</td>
+                        <td><span class="badge badge-info">Active</span></td>
                         <td><a href="https://${item.subdomain}" target="_blank" class="link-action"><i class="fa-solid fa-external-link"></i></a></td>
                     `;
                     subBody.appendChild(tr);
                 });
             } else {
-                subBody.innerHTML = `<tr><td colspan="2" class="no-data">No subdomains found.</td></tr>`;
+                subBody.innerHTML = `<tr><td colspan="3" class="no-data">No subdomains found.</td></tr>`;
             }
 
             const portsBody = document.getElementById('portsTableBody');
@@ -914,7 +1212,11 @@
 
             const endBody = document.getElementById('endpointsTableBody');
             endBody.innerHTML = '';
+            currentEndpointsList = [];
             if (data.endpoints && data.endpoints.length > 0) {
+                data.endpoints.forEach(e => {
+                    currentEndpointsList.push(e.url);
+                });
                 data.endpoints.slice(0, 100).forEach(e => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
@@ -975,13 +1277,13 @@
                     datasets: [{
                         data: Object.values(wafCounts),
                         backgroundColor: [
-                            '#06b6d4', // Cian
-                            '#10b981', // Esmeralda / Verde
-                            '#3b82f6', // Azul
-                            '#f59e0b', // Ámbar / Amarillo
-                            '#8b5cf6', // Violeta / Púrpura
-                            '#ec4899', // Rosa
-                            '#ef4444'  // Rojo
+                            '#06b6d4',
+                            '#10b981',
+                            '#3b82f6',
+                            '#f59e0b',
+                            '#8b5cf6',
+                            '#ec4899',
+                            '#ef4444'
                         ],
                         borderWidth: 0
                     }]
@@ -1015,11 +1317,11 @@
                         label: 'Count',
                         data: [code200, code401, code403, code404, codeOther],
                         backgroundColor: [
-                            '#10b981', // 200 OK: Verde
-                            '#8b5cf6', // 401 Auth: Púrpura
-                            '#f97316', // 403 Forbidden: Naranja
-                            '#ef4444', // 404 Not Found: Rojo
-                            '#06b6d4'  // Other: Cian
+                            '#10b981',
+                            '#8b5cf6',
+                            '#f97316',
+                            '#ef4444',
+                            '#06b6d4'
                         ],
                         borderRadius: 4
                     }]
