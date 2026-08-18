@@ -96,7 +96,6 @@
             padding-top: 4px;
         }
 
-        /* Estilo idéntico a login.html */
         .brand-logo {
             display: inline-flex;
             align-items: center;
@@ -647,7 +646,7 @@
             <div class="card" style="padding: 0; overflow: hidden;">
                 <div class="card-title" style="padding: 20px 24px 12px 24px; margin-bottom: 0;">Scanned Targets
                 </div>
-                <div class="table-wrapper" style="border: none; border-radius: 0;">
+                <div id="tableWrapper" class="table-wrapper" style="border: none; border-radius: 0;">
                     <table class="table-container">
                         <thead>
                             <tr>
@@ -670,7 +669,9 @@
                                 </td>
                                 <td>
                                     <div class="action-cell">
-                                        <a href="/results?target={{ target }}" class="btn-secondary">
+                                        <a href="/results?target={{ target }}"
+                                            onclick="viewResults(event, '{{ target }}')" class="btn-secondary"
+                                            title="View scan results">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                                                 stroke="currentColor" stroke-width="2">
                                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -717,6 +718,21 @@
             }
         });
 
+        function viewResults(event, target) {
+            if (event) event.preventDefault();
+            if (!target) return;
+
+            // Update storage keys used by the results page
+            localStorage.setItem('target', target);
+            localStorage.setItem('selectedTarget', target);
+            localStorage.setItem('selected_target', target);
+            sessionStorage.setItem('target', target);
+            sessionStorage.setItem('selectedTarget', target);
+
+            // Redirect with URL-encoded query string
+            window.location.href = `/results?target=${encodeURIComponent(target)}`;
+        }
+
         async function fetchTargetStats(targetName) {
             if (!targetName) return;
             try {
@@ -724,13 +740,13 @@
                 if (!res.ok) return;
                 const data = await res.json();
 
-                if (data.summary && data.summary.vuln_stats) {
-                    const stats = data.summary.vuln_stats;
-                    document.getElementById('stat-critical').textContent = stats.critical || 0;
-                    document.getElementById('stat-high').textContent = stats.high || 0;
-                    document.getElementById('stat-medium').textContent = stats.medium || 0;
-                    document.getElementById('stat-low').textContent = stats.low || 0;
-                }
+                // Compatible con múltiples estructuras de respuesta JSON
+                const stats = (data.summary && data.summary.vuln_stats) || data.vuln_stats || data.summary || data;
+
+                document.getElementById('stat-critical').textContent = stats.critical || 0;
+                document.getElementById('stat-high').textContent = stats.high || 0;
+                document.getElementById('stat-medium').textContent = stats.medium || 0;
+                document.getElementById('stat-low').textContent = stats.low || 0;
             } catch (err) {
                 console.error("Error loading vulnerability statistics:", err);
             }
@@ -921,9 +937,9 @@
                     const html = await res.text();
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
-                    const newTable = doc.querySelector('.table-container');
-                    if (newTable) {
-                        document.querySelector('.table-container').innerHTML = newTable.innerHTML;
+                    const newWrapper = doc.querySelector('#tableWrapper');
+                    if (newWrapper) {
+                        document.querySelector('#tableWrapper').innerHTML = newWrapper.innerHTML;
                     }
                 }
             } catch (err) {
