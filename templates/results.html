@@ -838,6 +838,7 @@
                             <thead>
                                 <tr>
                                     <th>Host / Subdomain</th>
+                                    <th>IP</th>
                                     <th>Open Ports</th>
                                 </tr>
                             </thead>
@@ -848,9 +849,18 @@
                 </div>
             </section>
 
+            <!-- WAF SECTION CON CAJA DE BÚSQUEDA -->
             <section id="tab-waf" class="tab-content" style="display: none;">
                 <div class="card">
-                    <h3 class="card-title">WAF Detection Results</h3>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                        <h3 class="card-title" style="margin-bottom: 0;">WAF Detection Results</h3>
+                        <div class="input-wrapper-search">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="filterWaf" placeholder="Filter WAF..."
+                                onkeyup="filterWafCards('wafGridContainer', 'filterWaf')" class="filter-input">
+                        </div>
+                    </div>
                     <div id="wafGridContainer"
                         style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
                     </div>
@@ -1009,6 +1019,24 @@
             }
         }
 
+        // Filtro para las tarjetas Grid de la sección WAF
+        function filterWafCards(containerId, inputId) {
+            const input = document.getElementById(inputId);
+            const filter = input.value.toLowerCase();
+            const container = document.getElementById(containerId);
+            const cards = container.children;
+
+            for (let i = 0; i < cards.length; i++) {
+                if (cards[i].classList.contains('no-data')) continue;
+                let txtValue = cards[i].textContent || cards[i].innerText;
+                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                    cards[i].style.display = "flex";
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }
+
         // Filtro de estado HTTP rápido
         function filterStatus(code, btn) {
             document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
@@ -1114,7 +1142,7 @@
 
             document.getElementById('vulnerabilitiesTableBody').innerHTML = `<tr><td colspan="5" class="no-data">No vulnerabilities found.</td></tr>`;
             document.getElementById('subdomainsTableBody').innerHTML = `<tr><td colspan="3" class="no-data">No subdomains found.</td></tr>`;
-            document.getElementById('portsTableBody').innerHTML = `<tr><td colspan="2" class="no-data">No open ports recorded.</td></tr>`;
+            document.getElementById('portsTableBody').innerHTML = `<tr><td colspan="3" class="no-data">No open ports recorded.</td></tr>`;
             document.getElementById('wafGridContainer').innerHTML = `<div class="no-data" style="grid-column: 1 / -1;">No specific WAF technologies detected.</div>`;
             document.getElementById('endpointsTableBody').innerHTML = `<tr><td colspan="2" class="no-data">No endpoints found.</td></tr>`;
             document.getElementById('webserversTableBody').innerHTML = `<tr><td colspan="4" class="no-data">No web server data.</td></tr>`;
@@ -1213,10 +1241,17 @@
                 data.items.forEach(item => {
                     currentSubdomainsList.push(item.subdomain);
                     const isNewBadge = item.is_new ? `<span class="badge badge-new">NEW</span>` : '';
+
+                    // Evaluación dinámica del estado del subdominio
+                    const isActive = (item.status_code && item.status_code !== '-') || (item.ip && item.ip !== '-');
+                    const statusBadge = isActive
+                        ? `<span class="badge badge-info">Active</span>`
+                        : `<span class="badge badge-warning">Inactive</span>`;
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td class="mono-text">${item.subdomain} ${isNewBadge}</td>
-                        <td><span class="badge badge-info">Active</span></td>
+                        <td>${statusBadge}</td>
                         <td><a href="https://${item.subdomain}" target="_blank" class="link-action"><i class="fa-solid fa-external-link"></i></a></td>
                     `;
                     subBody.appendChild(tr);
@@ -1230,15 +1265,17 @@
             const itemsWithPorts = data.items ? data.items.filter(i => i.ports && i.ports.length > 0) : [];
             if (itemsWithPorts.length > 0) {
                 itemsWithPorts.forEach(item => {
+                    const ipText = item.ip && item.ip !== '-' ? item.ip : '-';
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td class="mono-text">${item.subdomain}</td>
+                        <td class="mono-text" style="color: var(--cyan-accent);">${ipText}</td>
                         <td style="color: var(--success);" class="mono-text">${item.ports.join(', ')}</td>
                     `;
                     portsBody.appendChild(tr);
                 });
             } else {
-                portsBody.innerHTML = `<tr><td colspan="2" class="no-data">No open ports recorded.</td></tr>`;
+                portsBody.innerHTML = `<tr><td colspan="3" class="no-data">No open ports recorded.</td></tr>`;
             }
 
             const wafGrid = document.getElementById('wafGridContainer');
